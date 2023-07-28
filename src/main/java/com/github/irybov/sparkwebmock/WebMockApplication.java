@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpOptions;
@@ -65,8 +66,7 @@ public class WebMockApplication {
 		
         post("/verify", (request, response) -> {
         	
-        	String json = request.body();
-        	OperationRequest operation = gson.fromJson(json, OperationRequest.class);
+        	OperationRequest operation = gson.fromJson(request.body(), OperationRequest.class);
         	
         	response.type("text/xml");
         	if(banks.contains(operation.getBank())) {
@@ -76,21 +76,32 @@ public class WebMockApplication {
         			if(!currencies.contains(Currency.getInstance(operation.getCurrency()))) {
             			response.body("Wrong currency type " + operation.getCurrency() + 
             					" for target bill" + operation.getRecipient());
-            			response.status(404);        				
+            			response.status(400);
+            			throw new HttpResponseException(400, 
+            					"Wrong currency type " + operation.getCurrency() + 
+            					" for target bill " + operation.getRecipient());
         			}
         		}
         		else {
         			response.body("No bill with serial " + operation.getRecipient() + " found");
         			response.status(404);
+        			throw new HttpResponseException(404, 
+        					"No bill with serial " + operation.getRecipient() + " found");
         		}
         	}
         	else {
         		response.body("No bank with name " + operation.getBank() + " found");
         		response.status(404);
+    			throw new HttpResponseException(404, 
+    					"No bank with name " + operation.getBank() + " found");
         	}
         	return response.body();
         });
 		
+        exception(HttpResponseException.class, (exception, request, response) -> {
+        	response.type("application/json");
+        });
+        
 	}
 
 }
