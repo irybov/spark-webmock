@@ -11,6 +11,9 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -96,6 +99,27 @@ public class WebMockApplication {
     					"No bank with name " + operation.getBank() + " found");
         	}
         	return response.body();
+        	
+        });
+        
+        post("/transfer", (request, response) -> {
+        	
+        	HttpPost post = new HttpPost("http://localhost:8080/bankdemo/bills/external");
+        	
+            try(CloseableHttpClient httpClient = HttpClients.createDefault();) {
+            	
+                ResponseHandler<String> responseHandler = httpResponse -> {                	
+                    int status = httpResponse.getStatusLine().getStatusCode();
+                    response.status(status);
+                    HttpEntity entity = httpResponse.getEntity();
+                    return entity != null ? EntityUtils.toString(entity) : null;
+                };
+                HttpEntity string = new StringEntity(request.body(), ContentType.APPLICATION_JSON);
+                post.setEntity(string);
+                response.body(httpClient.execute(post, responseHandler));        	
+            	return response.body();
+            }
+            
         });
 		
         exception(HttpResponseException.class, (exception, request, response) -> {
