@@ -26,6 +26,8 @@ import static spark.Spark.*;
 public class WebMockApplication {
 
 	public static void main(String[] args) throws IOException {
+		
+		new MessageListener().start();
 
 //		HttpGet request = new HttpGet("http://localhost:8080/bankdemo/bills/operate");
 /*		HttpOptions request = new HttpOptions("http://localhost:8080/bankdemo/bills/external");
